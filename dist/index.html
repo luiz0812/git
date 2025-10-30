@@ -11,18 +11,18 @@
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="git">
+  <meta name="apple-mobile-web-app-title" content="Flet">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png" />
 
   <!-- Flet specific -->
-  <meta name="flet-route-url-strategy" content="path">
-  <meta name="flet-web-pyodide" content="true">
+  <meta name="flet-route-url-strategy" content="%FLET_ROUTE_URL_STRATEGY%">
+  <meta name="flet-web-pyodide" content="%FLET_WEB_PYODIDE%">
   <meta name="flet-websocket-endpoint-path" content="/ws">
 
-  <title>git</title>
+  <title>Flet</title>
   <link rel="manifest" href="manifest.json">
 
   <script>
@@ -30,16 +30,10 @@
     var useColorEmoji = false;
   </script>
 
-  <script>webRenderer="canvaskit";</script>
-  <script>useColorEmoji=false;</script>
+  <!-- webRenderer -->
+  <!-- useColorEmoji -->
 
-  
-        <script>
-            var micropipIncludePre = false;
-            var pythonModuleName = "main";
-        </script>
-        <script src="python.js"></script>
-        
+  <!-- pyodideCode -->
 </head>
 
 <body>

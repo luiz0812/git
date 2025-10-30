@@ -9,7 +9,6 @@ def main(page: ft.Page):
     page.window_width = 550
     page.window_height = 750
 
-    # Estado da classe selecionada
     classe_escolhida = {"valor": "A"}
 
     # Alternar tema
@@ -22,7 +21,6 @@ def main(page: ft.Page):
         )
         page.update()
 
-    # Campos
     ip_input = ft.TextField(
         label="Endereço IP",
         hint_text="Ex: 192.168.0.0",
@@ -41,7 +39,7 @@ def main(page: ft.Page):
     resultado = ft.Text(value="", selectable=True, size=14)
     lista_subredes = ft.Column(spacing=8, scroll=ft.ScrollMode.ALWAYS)
 
-    # Seleção da classe (botões)
+    # Seleção da classe
     def selecionar_classe(e):
         classe_escolhida["valor"] = e.control.text
         for b in botoes_classe.controls:
@@ -98,14 +96,36 @@ def main(page: ft.Page):
                 octetos = rede.network_address.exploded.split('.')
                 super_rede = ipaddress.ip_network(f"{octetos[0]}.{octetos[1]}.{octetos[2]}.0/24")
 
-            subredes = list(super_rede.subnets(new_prefix=rede.prefixlen))
+            # 🔒 Limitar quantidade de sub-redes para evitar travamentos
+            try:
+                subredes = list(super_rede.subnets(new_prefix=rede.prefixlen))
+            except ValueError:
+                resultado.value += "\n⚠️ Máscara inválida para a classe escolhida!"
+                lista_subredes.controls.clear()
+                page.update()
+                return
+
+            total_subredes = len(subredes)
+
+            # 🚫 Proteção contra estouro de memória
+            if total_subredes > 256:
+                lista_subredes.controls.clear()
+                lista_subredes.controls.append(
+                    ft.Text(
+                        f"⚠️ Muitas sub-redes ({total_subredes}) foram geradas.\n"
+                        f"Mostrando apenas as primeiras 10 para evitar travamentos.",
+                        color="orange",
+                        size=13,
+                    )
+                )
+                subredes = subredes[:10]
 
             lista_subredes.controls.clear()
             lista_subredes.controls.append(
                 ft.Text(f"📘 Sub-redes {mask_str} da Classe {classe_escolhida['valor']}:", weight="bold", size=16)
             )
 
-            for s in subredes[:8]:
+            for s in subredes:
                 lista_subredes.controls.append(
                     ft.Container(
                         content=ft.Text(
@@ -118,13 +138,13 @@ def main(page: ft.Page):
                     )
                 )
 
-            if len(subredes) > 8:
+            if total_subredes > len(subredes):
                 lista_subredes.controls.append(
-                    ft.Text(f"... e mais {len(subredes)-8} sub-redes ocultas.", italic=True, size=12)
+                    ft.Text(f"... e mais {total_subredes - len(subredes)} sub-redes ocultas.", italic=True, size=12)
                 )
 
         except Exception:
-            resultado.value = "Deu erro! tente mudar o ip ou a máscara"
+            resultado.value = "⚠️ Erro! Tente mudar o IP ou a máscara."
             lista_subredes.controls.clear()
 
         page.update()
@@ -133,7 +153,7 @@ def main(page: ft.Page):
     def copiar(e):
         if resultado.value:
             page.set_clipboard(resultado.value)
-            page.snack_bar = ft.SnackBar(ft.Text("copiados!✧"), open=True)
+            page.snack_bar = ft.SnackBar(ft.Text("Copiados! ✧"), open=True)
             page.update()
 
     # Limpar
@@ -143,7 +163,6 @@ def main(page: ft.Page):
         lista_subredes.controls.clear()
         page.update()
 
-    # Botões principais
     calcular_btn = ft.ElevatedButton(
         "Calcular", icon=ft.Icons.CALCULATE_ROUNDED, on_click=calcular, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10))
     )
@@ -151,16 +170,15 @@ def main(page: ft.Page):
         "Excluir", icon=ft.Icons.CLEAR_ROUNDED, on_click=limpar, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10))
     )
     copiar_btn = ft.IconButton(icon=ft.Icons.COPY_ALL_ROUNDED, tooltip="Copiar", on_click=copiar)
-    tema_btn = ft.IconButton(icon=ft.Icons.DARK_MODE_ROUNDED, tooltip="Mudar de tema", on_click=mudar_tema)
+    tema_btn = ft.IconButton(icon=ft.Icons.DARK_MODE_ROUNDED, tooltip="Mudar tema", on_click=mudar_tema)
 
-    # Layout principal
     card = ft.Card(
         content=ft.Container(
             content=ft.Column(
                 [
                     ft.Text("✮IP-Calcul✮", size=28, weight="bold", text_align="center"),
                     ft.Text(
-                        "Analise IPs, máscaras e sub-redes de uma forma rapida",
+                        "Analise IPs, máscaras e sub-redes de forma rápida e segura",
                         size=17,
                         italic=True,
                         text_align="center",
@@ -186,7 +204,6 @@ def main(page: ft.Page):
         elevation=10,
     )
 
-    # Centraliza o conteúdo e evita encolhimento
     page.add(
         ft.Column(
             [card],
